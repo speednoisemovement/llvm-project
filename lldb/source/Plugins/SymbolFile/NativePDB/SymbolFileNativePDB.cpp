@@ -388,7 +388,7 @@ Block *SymbolFileNativePDB::CreateBlock(PdbCompilandSymId block_id) {
   if (auto err = ts_or_err.takeError())
     return nullptr;
   auto ts = *ts_or_err;
-  if (!ts)
+  if (!ts || !ts->GetNativePDBParser())
     return nullptr;
   PdbAstBuilder* ast_builder = ts->GetNativePDBParser();
 
@@ -508,7 +508,7 @@ lldb::FunctionSP SymbolFileNativePDB::CreateFunction(PdbCompilandSymId func_id,
   if (auto err = ts_or_err.takeError())
     return func_sp;
   auto ts = *ts_or_err;
-  if (!ts)
+  if (!ts || !ts->GetNativePDBParser())
     return func_sp;
   ts->GetNativePDBParser()->GetOrCreateFunctionDecl(func_id);
 
@@ -800,7 +800,7 @@ TypeSP SymbolFileNativePDB::CreateAndCacheType(PdbTypeSymId type_id) {
   if (auto err = ts_or_err.takeError())
     return nullptr;
   auto ts = *ts_or_err;
-  if (!ts)
+  if (!ts || !ts->GetNativePDBParser())
     return nullptr;
 
   PdbAstBuilder* ast_builder = ts->GetNativePDBParser();
@@ -901,7 +901,7 @@ VariableSP SymbolFileNativePDB::CreateGlobalVariable(PdbGlobalSymId var_id) {
   if (auto err = ts_or_err.takeError())
     return nullptr;
   auto ts = *ts_or_err;
-  if (!ts)
+  if (!ts || !ts->GetNativePDBParser())
     return nullptr;
 
   ts->GetNativePDBParser()->GetOrCreateVariableDecl(var_id);
@@ -1007,10 +1007,10 @@ Block *SymbolFileNativePDB::GetOrCreateBlock(PdbCompilandSymId block_id) {
 
 void SymbolFileNativePDB::ParseDeclsForContext(
     lldb_private::CompilerDeclContext decl_ctx) {
-  TypeSystem* ts_or_err = decl_ctx.GetTypeSystem();
-  if (!ts_or_err)
+  TypeSystem* ts = decl_ctx.GetTypeSystem();
+  if (!ts || !ts->GetNativePDBParser())
     return;
-  PdbAstBuilder* ast_builder = ts_or_err->GetNativePDBParser();
+  PdbAstBuilder* ast_builder = ts->GetNativePDBParser();
   clang::DeclContext *context = ast_builder->FromCompilerDeclContext(decl_ctx);
   if (!context)
     return;
@@ -1883,7 +1883,7 @@ VariableSP SymbolFileNativePDB::CreateLocalVariable(PdbCompilandSymId scope_id,
     if (auto err = ts_or_err.takeError())
       return nullptr;
     auto ts = *ts_or_err;
-    if (!ts)
+    if (!ts || !ts->GetNativePDBParser())
       return nullptr;
 
     ts->GetNativePDBParser()->GetOrCreateVariableDecl(scope_id, var_id);
@@ -1913,7 +1913,7 @@ TypeSP SymbolFileNativePDB::CreateTypedef(PdbGlobalSymId id) {
   if (auto err = ts_or_err.takeError())
     return nullptr;
   auto ts = *ts_or_err;
-  if (!ts)
+  if (!ts || !ts->GetNativePDBParser())
     return nullptr;
 
   ts->GetNativePDBParser()->GetOrCreateTypedefDecl(id);
@@ -2071,7 +2071,7 @@ CompilerDecl SymbolFileNativePDB::GetDeclForUID(lldb::user_id_t uid) {
   if (auto err = ts_or_err.takeError())
     return CompilerDecl();
   auto ts = *ts_or_err;
-  if (!ts)
+  if (!ts || !ts->GetNativePDBParser())
     return {};
 
   if (auto decl = ts->GetNativePDBParser()->GetOrCreateDeclForUid(uid))
@@ -2085,7 +2085,7 @@ SymbolFileNativePDB::GetDeclContextForUID(lldb::user_id_t uid) {
   if (auto err = ts_or_err.takeError())
     return {};
   auto ts = *ts_or_err;
-  if (!ts)
+  if (!ts || !ts->GetNativePDBParser())
     return {};
 
   PdbAstBuilder *ast_builder = ts->GetNativePDBParser();
@@ -2103,7 +2103,7 @@ SymbolFileNativePDB::GetDeclContextContainingUID(lldb::user_id_t uid) {
   if (auto err = ts_or_err.takeError())
     return CompilerDeclContext();
   auto ts = *ts_or_err;
-  if (!ts)
+  if (!ts || !ts->GetNativePDBParser())
     return {};
 
   PdbAstBuilder *ast_builder = ts->GetNativePDBParser();

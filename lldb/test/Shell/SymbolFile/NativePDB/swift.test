@@ -1,0 +1,29 @@
+# REQUIRES: swift, target-windows
+# Tests that setting breakpoints in Swift doesn't crash
+
+# RUN: rm -rf %t
+# RUN: split-file %s %t
+# RUN: powershell -Command "echo XXX SDKROOT $env:SDKROOT END"
+# RUN: %target-swiftc -v -g -debug-info-format=codeview %t/main.swift -o %t/main
+# RUN: %lldb %t/main -s %t/commands.input
+#--- main.swift
+class HelloWorldPrinter {
+    let shouldPrint: Bool   
+    init(shouldPrint: Bool) {
+        self.shouldPrint = shouldPrint
+    }
+    func print() {
+        if shouldPrint {
+            Swift.print("Hello, world!")
+        }
+    }
+}
+func main() {
+    let printer = HelloWorldPrinter(shouldPrint: true)
+    // Put a breakpoint on the following line and notice that the debugger doesn't
+    // show local variables, so you can't see the printer variable or it's members.
+    printer.print()
+}
+#--- commands.input
+run
+b main.swift:4
